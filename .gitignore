@@ -1,3 +1,14 @@
+.gitignore
+config.py
+.env
+.ignore
+**__pycache__
+**discloud.config
+**/json
+**/discloud_backup
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
