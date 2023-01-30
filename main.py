@@ -6,7 +6,7 @@ import asyncio
 from discord.ext import commands
 from discord.ext.commands import Context
 
-# nothing
+# discord bot
 
 
 class Canalha(commands.Bot):
