@@ -144,16 +144,16 @@ class AlertEvent(commands.Cog):
         ''' Configure seus alertas do Mudae bot '''
 
         alerta = alerta.lower()
-
-        if alerta not in ('rolls', 'claim'):
-            await ctx.send('Erro:'
-                           'Esperado: c!alerta rolls/claim'
-                           f'Recebido: c!alerta {alerta}', ephemeral=True)
-            return
-
-
         guild = ctx.guild
         user = ctx.author
+
+        if alerta not in ('rolls', 'claim'):
+            em = discord.Embed(color=config.cinza,
+                               description=f'Error: **{alerta}** não é um argumento válido\n'
+                                            'Esperado: **c!mudae alerta rolls/claim**')
+            em.set_footer(text=user.display_name, icon_url=user.avatar.url)
+            await ctx.send(embed=em, ephemeral=True)
+            return
 
         await mudae_alert_json(guild)
         mudae_alert = await get_mudae_alert_data()
@@ -222,7 +222,8 @@ class AlertEvent(commands.Cog):
         if isinstance(err, commands.errors.MissingRequiredArgument):
             em.description = ('Error: Falta de argumento\n'
                               'Esperado: **c!mudae alerta rolls/claim**')
-            await ctx.send(embed=em)
+            
+        await ctx.send(embed=em, ephemeral=True)
         print(err)
         return
 
@@ -299,7 +300,7 @@ class AlertEvent(commands.Cog):
                               'Esperado: **c!mudae wish <nome da serie>**')
             await ctx.send(embed=em)
         print(err)
-        return
+        return  
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
