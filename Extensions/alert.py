@@ -215,7 +215,7 @@ class AlertEvent(commands.Cog):
     
     @alerta.error
     async def alerta_error(self, ctx: commands.Context, err):
-        
+
         em = discord.Embed(color=config.vermelho, description=err)
         em.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar.url)
 
@@ -290,10 +290,16 @@ class AlertEvent(commands.Cog):
     
     @wish.error
     async def wish_error(self, ctx: commands.Context, err):
-        if isinstance(err, commands.errors.MissingRequiredArgument):
-            await ctx.send('Você deve informar uma serie\n'
-                           'Ex.: `c!mudae wish Fate`', ephemeral=True)
+        em = discord.Embed(color=config.vermelho, description=err)
+        em.set_footer(text=ctx.author.display_name,
+                      icon_url=ctx.author.avatar.url)
 
+        if isinstance(err, commands.errors.MissingRequiredArgument):
+            em.description = ('Error: Falta de argumento\n'
+                              'Esperado: **c!mudae wish <nome da serie>**')
+            await ctx.send(embed=em)
+        print(err)
+        return
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
