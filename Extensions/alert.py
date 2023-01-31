@@ -48,7 +48,7 @@ class AlertEvent(commands.Cog):
 
             mudae_rolls = guild.get_channel(config.mudae_rolls)
 
-            em = discord.Embed(color=config.vermelho,
+            em = discord.Embed(color=config.cinza,
                                description=f'Reset de rolls <t:{tempo}:R>, a seus postos {mudae_rolls.mention}',
                                timestamp=datetime.datetime.now(tz=config.tz_brazil))
             em.set_footer(text=guild.name, icon_url=guild.icon.url)
@@ -168,11 +168,9 @@ class AlertEvent(commands.Cog):
                 with open('./json/mudae_alert.json', 'w') as f:
                     json.dump(mudae_alert, f, indent=4)
 
-                em = discord.Embed(color=config.vermelho,
-                                  description=f'{user.mention}, você foi adicionado ao alerta de rolls\n'
-                                  'O alerta é gerado 5 minutos antes do reset',
-                                  timestamp=datetime.datetime.now(tz=config.tz_brazil))
-                em.set_footer(text=guild.name, icon_url=guild.icon.url)
+                em = discord.Embed(color=config.cinza,
+                                  description=f'Adicionado ao alerta de rolls\n')
+                em.set_footer(text=user.display_name, icon_url=user.avatar.url)
 
             else:
                 x: list = mudae_alert[str(guild.id)]['rolls']
@@ -182,10 +180,9 @@ class AlertEvent(commands.Cog):
                 with open('./json/mudae_alert.json', 'w') as f:
                     json.dump(mudae_alert, f, indent=4)
 
-                em = discord.Embed(color=config.vermelho,
-                                   description=f'{user.mention}, você foi removido do alerta de rolls',
-                                   timestamp=datetime.datetime.now(tz=config.tz_brazil))
-                em.set_footer(text=guild.name, icon_url=guild.icon.url)
+                em = discord.Embed(color=config.cinza,
+                                   description=f'Removido do alerta de rolls')
+                em.set_footer(text=user.display_name, icon_url=user.avatar.url)
 
         if alerta == 'claim':
             if user.id not in mudae_alert[str(guild.id)]['claim']:
@@ -197,11 +194,9 @@ class AlertEvent(commands.Cog):
                 with open('./json/mudae_alert.json', 'w') as f:
                     json.dump(mudae_alert, f, indent=4)
 
-                em = discord.Embed(color=config.vermelho,
-                                   description=f'{user.mention}, você foi adicionado ao alerta de claim\n'
-                                   'O alerta é gerado 5 minutos antes do reset',
-                                   timestamp=datetime.datetime.now(tz=config.tz_brazil))
-                em.set_footer(text=guild.name, icon_url=guild.icon.url)
+                em = discord.Embed(color=config.cinza,
+                                   description=f'Adicionado ao alerta de claim')
+                em.set_footer(text=user.display_name, icon_url=user.avatar.url)
 
             else:
                 x: list = mudae_alert[str(guild.id)]['claim']
@@ -211,12 +206,25 @@ class AlertEvent(commands.Cog):
                 with open('./json/mudae_alert.json', 'w') as f:
                     json.dump(mudae_alert, f, indent=4)
 
-                em = discord.Embed(color=config.vermelho,
-                                   description=f'{user.mention}, você foi removido do alerta de claim',
-                                   timestamp=datetime.datetime.now(tz=config.tz_brazil))
-                em.set_footer(text=guild.name, icon_url=guild.icon.url)
+                em = discord.Embed(color=config.cinza,
+                                   description=f'{user.mention}, você foi removido do alerta de claim')
+                em.set_footer(text=user.display_name, icon_url=user.avatar.url)
 
         await ctx.send(embed=em, ephemeral=True)
+
+    
+    @alerta.error
+    async def alerta_error(self, ctx: commands.Context, err):
+        
+        em = discord.Embed(color=config.vermelho, description=err)
+        em.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar.url)
+
+        if isinstance(err, commands.errors.MissingRequiredArgument):
+            em.description = ('Error: Falta de argumento\n'
+                              'Esperado: **c!mudae alerta rolls/claim**')
+            await ctx.send(embed=em)
+        print(err)
+        return
 
 
     @mudae.command(name='wish', with_app_command=True)
