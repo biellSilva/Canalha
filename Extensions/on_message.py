@@ -23,7 +23,7 @@ class On_message(commands.Cog):
             sugestao = guild.get_channel(config.sugestao)
             
             em = discord.Embed(title="Sugestão",
-                               color=config.vermelho,
+                               color=config.cinza,
                                description=f"Sugestão de {message.author.mention}:\n"
                                            f"||autor: {message.author} - {message.author.id}||\n\n"
                                            f"{message.content}",
@@ -34,6 +34,12 @@ class On_message(commands.Cog):
             await msg.add_reaction('👍')
             await msg.add_reaction('👎')
             await message.delete()
+            return
+
+        if message.channel.id == config.mudae_rolls:
+            if 'sniper' in message.content.lower():
+                await message.reply('https://tenor.com/view/gun-reload-sniper-gif-16301372')
+                return
         
 
 async def setup(bot):
