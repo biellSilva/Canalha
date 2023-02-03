@@ -200,12 +200,6 @@ class instanciaView(discord.ui.View):
         placeholder='Selecione seus cargos',
         options=[
             discord.SelectOption(
-                label='Abismo Vazio',
-                value='abismo',
-                emoji='☠️',
-                description='Membro que quer ser notificado quando marcarem este cargo'),
-
-            discord.SelectOption(
                 label='Chefe Mundial',
                 value='chefe',
                 emoji='👾',
@@ -215,6 +209,12 @@ class instanciaView(discord.ui.View):
                 label='Fenda do Vazio',
                 value='fenda',
                 emoji='💀',
+                description='Membro que quer ser notificado quando marcarem este cargo'),
+            
+            discord.SelectOption(
+                label='Abismo Vazio',
+                value='abismo',
+                emoji='☠️',
                 description='Membro que quer ser notificado quando marcarem este cargo'),
 
             discord.SelectOption(
@@ -240,6 +240,12 @@ class instanciaView(discord.ui.View):
                 value='operaçao',
                 emoji='🏷️',
                 description='Membro que quer ser notificado quando marcarem este cargo'),
+            
+            discord.SelectOption(
+                label='Origem da Guerra',
+                value='origem',
+                emoji='🛡️',
+                description='Membro que quer ser notificado quando marcarem este cargo'),
         ]
     )
     async def callback(self, interaction: discord.Interaction, select: discord.ui.Select):
@@ -255,11 +261,12 @@ class instanciaView(discord.ui.View):
         exploraçao = guild.get_role(config.exploraçao_interstelar)
         incursao = guild.get_role(config.incursao)
         operaçao = guild.get_role(config.operaçao_conjunta)
+        origem = guild.get_role(config.origem_da_guerra)
 
         membro = guild.get_role(config.membros)
 
-        roles_list = [abismo, chefe, fenda, embate, exploraçao, incursao, operaçao]
-        values_list = ['abismo', 'chefe', 'fenda', 'embate', 'exploraçao', 'incursao', 'operaçao']
+        roles_list = [abismo, chefe, fenda, embate, exploraçao, incursao, operaçao, origem]
+        values_list = ['abismo', 'chefe', 'fenda', 'embate', 'exploraçao', 'incursao', 'operaçao', 'origem']
         index_value = 0
 
         add = '**Adicionado:**'
