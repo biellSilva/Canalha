@@ -314,7 +314,7 @@ class gruposCommand(commands.Cog):
         admin = guild.get_role(config.admin)
         dev = guild.get_role(config.dev)
 
-        if lider not in user.roles and admin not in user.roles and dev not in user.roles:
+        if (lider not in user.roles) and (admin not in user.roles) and (dev not in user.roles):
             await interaction.response.send_message(f'Você não é um {lider.mention} ou {admin.mention}', ephemeral=True, delete_after=10)
             return
 
@@ -378,15 +378,9 @@ class gruposCommand(commands.Cog):
                     x = f'{field.value}\n{membro.mention}'
                     embed[0].set_field_at(ind, name=field.name, value=x)
 
-                    for field_vagas in embed[1].fields:
-                        if cargo.lower() in field_vagas.name.lower():
-                            y = int(field_vagas.value) - 1
-                            embed[1].set_field_at(
-                                ind, name=field_vagas.name, value=y)
+                    embed[1].set_field_at(ind, name=embed[1].fields[ind].name, value=int(embed[1].fields[ind].value) - 1)
 
-                    z = int(embed[0].fields[4].value) - 1
-                    embed[0].set_field_at(
-                        4, name=embed[0].fields[4].name, value=z)
+                    embed[0].set_field_at(4, name=embed[0].fields[4].name, value=int(embed[0].fields[4].value) - 1)
 
                     await messagem.edit(embeds=embed)
                     await interaction.followup.send(f'{membro.mention} adicionado como {field.name}', ephemeral=True)
@@ -434,13 +428,7 @@ class gruposCommand(commands.Cog):
                 z = int(embed[0].fields[4].value) + 1
                 embed[0].set_field_at(4, name=embed[0].fields[4].name, value=z)
 
-                nome: str = re.split(r'[<:>0-9]+', field.name)
-
-                for field_vagas in embed[1].fields:
-                    if nome[1].lower() in field_vagas.name.lower():
-                        y = int(field_vagas.value) + 1
-                        embed[1].set_field_at(
-                            ind, name=field_vagas.name, value=y)
+                embed[1].set_field_at(ind, name=embed[1].fields[ind].name, value=int(embed[1].fields[ind].value) + 1)
 
                 await messagem.edit(embeds=embed)
                 await response.delete()
@@ -497,7 +485,7 @@ class gruposCommand(commands.Cog):
                 return
 
         if cor:
-            if len(cor) == 6:
+            if len(cor) > 6:
                 try:
                     cor = literal_eval(cor.replace(' ', '').replace('#', '0x'))
                 except:
@@ -514,8 +502,8 @@ class gruposCommand(commands.Cog):
         if nivel > 80:
             nivel = 80
 
-        tempo = int(f'{data:.0f}')
-        grupos = f'{int(tempo - 600):.0f}'
+        tempo = int(data)
+        grupos = int(tempo - 600)
 
         em = discord.Embed(title=f'INCURSÃO INDEPENDENTE [{nivel}]',
                            color=cor,
@@ -577,11 +565,13 @@ class gruposCommand(commands.Cog):
         if oficial:
             await canal_oficial.send(incursao.mention, embeds=[em, em1, em2], view=IncursaoView())
         else:
-            await canal_clan.send(incursao.mention, embeds=[em, em1], view=IncursaoView())
+            await canal_clan.send(incursao.mention, embeds=[em, em1, em2], view=IncursaoView())
 
         await user.add_roles(lider)
-        await interaction.edit_original_response(content=f'{"Incursão: " if oficial else "Incursao Oficial: "}*{em.title}* criada para <t:{tempo}:F>\n'
-                                                         f'Você se tornou um {lider.mention}, lembre-se de estar online às <t:{grupos}:t>')
+        resp = discord.Embed(color=config.cinza,
+                             description=f'{"Incursão: " if oficial else "Incursao Oficial: "}*{em.title}* criada para <t:{tempo}:F>\n'
+                                         f'Você se tornou um {lider.mention}, lembre-se de estar online às <t:{grupos}:t>')
+        await interaction.edit_original_response(em=resp)
 
         logEmbed = discord.Embed(color=config.verde,
                                  description=f'{user.mention} criou um grupo para {"incursão" if oficial else " incursao oficial"}\nTitulo: {em.title}',
