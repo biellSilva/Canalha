@@ -362,11 +362,18 @@ class gruposCommand(commands.Cog):
         canal_clan = guild.get_channel(config.inc_clan)
         log = guild.get_channel(config.log)
 
-        cargo = guild.get_role(int(objetivo.replace('<', '').replace('>', '').replace('&', '').replace('@', '')))
-
         error_embed = discord.Embed(color=config.cinza,
                                     description='')
-        error_embed.set_footer(text=user.display_name, icon_url=user.display_avatar.url)
+        error_embed.set_footer(text=user.display_name,
+                               icon_url=user.display_avatar.url)
+
+        try:
+            cargo = guild.get_role(int(objetivo.replace('<', '').replace('>', '').replace('&', '').replace('@', '')))
+        except ValueError:
+            error_embed.description=(f'**Objetivo** deve ser uma menção de cargo')
+            error_embed.timestamp = datetime.datetime.now(tz=config.tz_brazil)
+            await interaction.edit_original_response(embed=error_embed)
+            return
 
         if cargo.mentionable == False:
             error_embed.description = f'Pingar o cargo {cargo.mention} não é permitido'
@@ -386,7 +393,7 @@ class gruposCommand(commands.Cog):
             return message.author == interaction.user and message.channel == interaction.channel and message.content is not ''
 
         try:
-            message: discord.Message = await self.bot.wait_for('message', check=check, timeout=300)
+            message: discord.Message = await self.bot.wait_for('message', check=check, timeout=180)
         except asyncio.TimeoutError:
             error_embed.description = 'O tempo de espera chegou ao fim, comando abortado'
             error_embed.timestamp = datetime.datetime.now(tz=config.tz_brazil)
@@ -419,18 +426,26 @@ class gruposCommand(commands.Cog):
             return message.author == interaction.user and message.channel == interaction.channel and message.content == 'confirmo'
 
         try:
-            message: discord.Message = await self.bot.wait_for('message', check=check, timeout=60)
+            message: discord.Message = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
             error_embed.description = 'O tempo de espera chegou ao fim, comando abortado'
             error_embed.timestamp = datetime.datetime.now(tz=config.tz_brazil)
-            await interaction.edit_original_response(embed=error_embed)
+            await interaction.edit_original_response(content='', embed=error_embed)
             return
         
         if message.content.lower() == 'confirmo':
             await message.delete()
-            await interaction.channel.send(cargo.mention, embed=em, view=GruposView())
+            await canal_clan.send(cargo.mention, embed=em, view=GruposView())
+
             error_embed.description = f'Grupo enviado para {canal_clan.mention}'
             await interaction.edit_original_response(content='', embed=error_embed)
+
+            logEmbed = discord.Embed(color=config.verde,
+                                     description=f'{user.mention} criou um grupo para {cargo.mention}\n'
+                                     f'**Descrição:** \n{em.description}',
+                                     timestamp=datetime.datetime.now(tz=config.tz_brazil))
+            logEmbed.set_footer(text=f'{user} - {user.id}',icon_url=user.display_avatar.url)
+            await log.send(embed=logEmbed)
             return
 
 
