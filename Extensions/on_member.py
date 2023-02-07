@@ -15,7 +15,7 @@ class onMember(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         guild: discord.Guild = self.bot.get_guild(config.avalon)
         visitante = guild.get_role(config.visitante)
-        log = guild.get_channel(config.log)
+        log = guild.get_channel(config.member_log)
 
         if member.bot:
             return
@@ -34,7 +34,7 @@ class onMember(commands.Cog):
     async def on_member_leave(self, member: discord.Member):
         guild: discord.Guild = self.bot.get_guild(config.avalon)
         visitante = guild.get_role(config.visitante)
-        log = guild.get_channel(config.log)
+        log = guild.get_channel(config.member_log)
 
         em = discord.Embed(color=config.vermelho,
                         description=f'{member.mention} saiu',
@@ -88,11 +88,10 @@ class onMember(commands.Cog):
                             f'**Mensagem deletada:**\n'
                             f'{message.content}',
                             timestamp=datetime.datetime.now(tz=config.tz_brazil))
-        em.set_footer(text=f'{message.author.display_name} - {message.author.id}')
-        em.set_author(name=message.author,
-                      icon_url=message.author.display_avatar.url)
-
+        
+        em.set_footer(text=f'{message.author.display_name} - {message.author.id}', icon_url=message.author.display_avatar.url)
         await log.send(embed=em)
+
 
 
     @commands.Cog.listener()
@@ -113,9 +112,7 @@ class onMember(commands.Cog):
                            f'**Mensagem depois:**\n'
                            f'{message_after.content}',
                         timestamp=datetime.datetime.now(tz=config.tz_brazil))
-        em.set_footer(text=f'{message_before.author.display_name} - {message_before.author.id}')
-        em.set_author(name=message_before.author, icon_url=message_before.author.display_avatar.url)
-
+        em.set_footer(text=f'{message_before.author.display_name} - {message_before.author.id}', icon_url=message_before.author.display_avatar.url)
         await log.send(embed=em)
 
 

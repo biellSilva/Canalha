@@ -183,7 +183,7 @@ class gruposCommand(commands.Cog):
     grupos = app_commands.Group(name='grupos', description='Comandos para formar grupos', guild_only=True)
 
     @grupos.command(name='incursao')
-    @app_commands.describe(data='Informe uma data, ex.: 22/12/2022 21:00:00',
+    @app_commands.describe(data='Informe uma data, ex.: 22/12/2022 21:00',
                            nivel='Informe o nivel minimo necessario, ex.: 80',
                            objetivo='Informe o caminho da incursão, ex: apofis - frigg - nemesis',
                            titulo='Define um Título personalizado',
@@ -205,7 +205,7 @@ class gruposCommand(commands.Cog):
 
         canal_oficial = guild.get_channel(config.inc_oficial)
         canal_clan = guild.get_channel(config.inc_clan)
-        log = guild.get_channel(config.log)
+        log = guild.get_channel(config.group_log)
 
         incursao = guild.get_role(config.incursao)
         lider = guild.get_role(config.líder_incursor)
@@ -350,7 +350,7 @@ class gruposCommand(commands.Cog):
     @app_commands.describe(nivel='Informe o nivel minimo necessario, ex.: 80',
                            objetivo='Informe o cargo referente a instância',
                            vagas='Informe quantas vagas o grupo deve ter')
-    async def grupos_outros(self, interaction: discord.Interaction, objetivo: str, nivel: int, vagas: Optional[int]):
+    async def grupos_outros(self, interaction: discord.Interaction, objetivo: str, nivel: int, vagas: int):
 
         ''' Crie grupos para o que desejar'''
 
@@ -360,7 +360,7 @@ class gruposCommand(commands.Cog):
         user = interaction.user
 
         canal_clan = guild.get_channel(config.inc_clan)
-        log = guild.get_channel(config.log)
+        log = guild.get_channel(config.group_log)
 
         error_embed = discord.Embed(color=config.cinza,
                                     description='')
@@ -376,15 +376,17 @@ class gruposCommand(commands.Cog):
             return
 
         if cargo.mentionable == False:
-            error_embed.description = f'Pingar o cargo {cargo.mention} não é permitido'
+            error_embed.description = f'{cargo.mention} não é permitido'
             error_embed.timestamp = datetime.datetime.now(tz=config.tz_brazil)
             await interaction.edit_original_response(embed=error_embed)
             return
         
         em = discord.Embed(color=cargo.color,
                            description='Envie uma mensagem contendo o texto que deseja como descrição do seu grupo\n\n'
-                           f'Use **c!cargo** em qualquer lugar na mensagem para que essa parte seja substituida pela menção do cargo {cargo.mention}\n\n'
-                           'Use **c!leave** se deseja cancelar o comando',
+                           f'Use **c!cargo** em qualquer lugar da mensagem para que essa parte seja substituida pela menção do cargo {cargo.mention}\n\n'
+                           'É possivel usar timestamps como \<t:1675815469> que resulta em <t:1675815469>, para uma rapida conversão use o comando </unixtime:1072651592236531772> e informe uma data ou horario\n\n'
+                           'Use **c!leave** se deseja cancelar o comando\n'
+                           f'Tempo: <t:{int(time.time())+180}:R>',
                            timestamp=datetime.datetime.now(tz=config.tz_brazil))
 
         await interaction.edit_original_response(embed=em)
@@ -410,7 +412,7 @@ class gruposCommand(commands.Cog):
         if 'c!cargo' in message.content.lower():
             message.content = message.content.replace('c!cargo', cargo.mention)
 
-        em.description = message.content.capitalize()
+        em.description = message.content
         await message.delete()
 
         em.title = f'{cargo.name} [lvl: {nivel}]'
@@ -420,13 +422,15 @@ class gruposCommand(commands.Cog):
         if vagas:
             em.add_field(name='Vagas', value=vagas)
 
-        await interaction.edit_original_response(content='Digite **confirmo** se o grupo está certo', embed=em)
+        await interaction.edit_original_response(content='Digite **confirmo** se o grupo está certo\n'
+                                                        f'Tempo: <t:{int(time.time())+180}:R>', 
+                                                        embed=em)
 
         def check(message: discord.Message):
             return message.author == interaction.user and message.channel == interaction.channel and message.content == 'confirmo'
 
         try:
-            message: discord.Message = await self.bot.wait_for('message', check=check, timeout=30)
+            message: discord.Message = await self.bot.wait_for('message', check=check, timeout=15)
         except asyncio.TimeoutError:
             error_embed.description = 'O tempo de espera chegou ao fim, comando abortado'
             error_embed.timestamp = datetime.datetime.now(tz=config.tz_brazil)
@@ -467,8 +471,8 @@ class GruposView(discord.ui.View):
             if 'participantes' in field.name.lower():
                 if user.mention in field.value:
 
-                    embed[0].set_field_at(1, name=embed[0].fields[1].name, value=int(embed[0].fields[1].value) + 1)
                     embed[0].set_field_at(0, name=field.name, value=field.value.replace(f'\n{user.mention}', ''))
+                    embed[0].set_field_at(1, name=embed[0].fields[1].name, value=int(embed[0].fields[1].value) + 1)
                     await msg_edit.edit(embeds=embed)
 
                     em.description = f'Você foi removido do grupo'
@@ -497,7 +501,7 @@ class GruposView(discord.ui.View):
         lider = guild.get_role(config.líder_incursor)
         admin = guild.get_role(config.admin)
         dev = guild.get_role(config.dev)
-        log = guild.get_channel(config.log)
+        log = guild.get_channel(config.group_log)
 
 
         if (lider in user.roles) or (admin in user.roles) or (dev in user.roles):
@@ -737,7 +741,7 @@ class IncursaoView(discord.ui.View):
         lider = guild.get_role(config.líder_incursor)
         admin = guild.get_role(config.admin)
         dev = guild.get_role(config.dev)
-        log = guild.get_channel(config.log)
+        log = guild.get_channel(config.group_log)
 
         try:
             if interaction.message.embeds[2]:
