@@ -4,3 +4,5 @@ pytz >= 2022.5
 googletrans == 4.0.0-rc1
 emoji-country-flag
 countryinfo 
+discord.py[voice]
+youtube_dl

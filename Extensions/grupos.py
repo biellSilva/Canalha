@@ -392,7 +392,7 @@ class gruposCommand(commands.Cog):
         await interaction.edit_original_response(embed=em)
 
         def check(message: discord.Message):
-            return message.author == interaction.user and message.channel == interaction.channel and message.content is not ''
+            return message.author == interaction.user and message.channel == interaction.channel and message.content != ''
 
         try:
             message: discord.Message = await self.bot.wait_for('message', check=check, timeout=180)

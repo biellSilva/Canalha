@@ -6,6 +6,7 @@ config.py
 **discloud.config
 **/json
 **/discloud_backup
+**ffmpeg.exe
 
 
 
@@ -138,3 +139,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+Extensions/voice.py
