@@ -6,12 +6,10 @@ import asyncio
 from discord.ext import commands
 from discord.ext.commands import Context
 
-# discord bot
-
 
 class Canalha(commands.Bot):
     def __init__(self, intents: discord.Intents):
-        super().__init__(command_prefix='c!', intents=intents, help_command=None)
+        super().__init__(command_prefix='c!', intents=intents, help_command=None, case_insensitive=True, strip_after_prefix=True)
         self.initial_extensions = []
         
 
@@ -29,7 +27,7 @@ class Canalha(commands.Bot):
     async def on_ready(self):
         print('-'*15)
         print(bot.user)
-        print(f'{bot.status} - {int(bot.latency)} ms')
+        print(f'{bot.status} - {round(bot.latency * 1000)}ms')
         print('-'*15)
 
 
@@ -77,7 +75,7 @@ async def sync(ctx: Context, spec=None):
             # p!sync            synca global
             sync = await ctx.bot.tree.sync()
 
-        await ctx.reply(f'{len(sync)} comandos sincronizados {" " if spec == None else "para este servidor."}')
+        await ctx.reply(f'{len(sync)} comandos sincronizados')
         return
 
 

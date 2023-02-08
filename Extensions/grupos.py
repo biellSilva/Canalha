@@ -2,7 +2,6 @@ import discord
 import config
 import time
 import datetime
-import re
 import random
 import asyncio
 
@@ -309,13 +308,6 @@ class gruposCommand(commands.Cog):
                               f'*A formação dos grupos começa as <t:{grupos}:t> horas, no dia <t:{grupos}:D>, <t:{grupos}:R>*\n\n'
                               f'Os membros abaixo estarão listados para os grupos de incursão e serão remanejados para os respectivos grupos de forma equilibrada tendo seus grupos formados e postados no dia da incursão:')
 
-            em2 = discord.Embed(color=cor, description='**OBSERVAÇÕES:**\n'
-                                '*1) Os membros do grupo que não puderem vir ou que vão se atrasar por algum motivo, favor avisar o encarregado pela Incursão.*\n'
-                                '*2) O grupo será montado 10 minutos antes do horário marcado e começará no horário que foi determinado.*\n'
-                                f'*3) Caso o horário chegue ao seu limite e os membros do grupo principal não estiverem presentes, o {lider.mention} dará sua vaga ao próximo na lista de reservas.*',
-                                timestamp=datetime.datetime.now(tz=config.tz_brazil))
-            em2.set_footer(text='Clique em um dos botões abaixo para entrar')
-
         else:
             value = 8
             em1.add_field(name='Vagas DPS:', value=5)
@@ -323,6 +315,13 @@ class gruposCommand(commands.Cog):
             em1.add_field(name='Vagas TANK:', value=1)
 
         em.add_field(name='Vagas:', value=value)
+
+        em2 = discord.Embed(color=cor, description='**OBSERVAÇÕES:**\n'
+                            '*1) Os membros do grupo que não puderem vir ou que vão se atrasar por algum motivo, favor avisar o encarregado pela Incursão.*\n'
+                            '*2) O grupo será montado 10 minutos antes do horário marcado e começará no horário que foi determinado.*\n'
+                            f'*3) Caso o horário chegue ao seu limite e os membros do grupo principal não estiverem presentes, o {lider.mention} dará sua vaga ao próximo na lista de reservas.*',
+                            timestamp=datetime.datetime.now(tz=config.tz_brazil))
+        em2.set_footer(text='Clique em um dos botões abaixo para entrar')
 
         if oficial:
             await canal_oficial.send(incursao.mention, embeds=[em, em1, em2], view=IncursaoView())
@@ -369,8 +368,14 @@ class gruposCommand(commands.Cog):
 
         try:
             cargo = guild.get_role(int(objetivo.replace('<', '').replace('>', '').replace('&', '').replace('@', '')))
-        except ValueError:
+        except:
             error_embed.description=(f'**Objetivo** deve ser uma menção de cargo')
+            error_embed.timestamp = datetime.datetime.now(tz=config.tz_brazil)
+            await interaction.edit_original_response(embed=error_embed)
+            return
+        
+        if cargo == None:
+            error_embed.description = (f'**Objetivo** deve ser uma menção de cargo')
             error_embed.timestamp = datetime.datetime.now(tz=config.tz_brazil)
             await interaction.edit_original_response(embed=error_embed)
             return

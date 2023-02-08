@@ -6,7 +6,9 @@ config.py
 **discloud.config
 **/json
 **/discloud_backup
+**ffmpeg
 **ffmpeg.exe
+**ffmpega
 
 
 

@@ -69,7 +69,7 @@ class AbertosCommand(commands.Cog):
                                                 '`22/12/2022` - para as 21 horas do dia determinado\n\n'
                                                 f'**Recebido:** {data}')
                         
-                        await ctx.send(embed=error_embed)
+                        await ctx.send(embed=error_embed, ephemeral=True)
                         return
 
         em = discord.Embed(color=config.cinza,
