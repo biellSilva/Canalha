@@ -8,6 +8,8 @@ config.py
 **/discloud_backup
 **ffmpeg
 **ffmpeg.exe
+**/jdk-18.0.2.1
+**jar
 
 
 

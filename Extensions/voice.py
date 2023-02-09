@@ -1,149 +1,133 @@
 import discord
 import config
-import datetime
-import asyncio
-import youtube_dl
-import re
+import wavelink
 
-
-from discord import app_commands
-from discord.ext import commands, tasks
+from discord.ext import commands
 from typing import Optional
 
 
-youtube_dl.utils.bug_reports_message = lambda: ''
-
-
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0',
-}
-
-ffmpeg_options = {
-    'options': '-vn',
-}
-
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data: dict, volume=0.2):
-        super().__init__(source, volume)
-
-        self.data = data
-
-        self.title = data.get('title')
-        self.url = data.get('url')
-        self.view = data.get('view_count')
-        self.duration = str(datetime.timedelta(seconds=data.get("duration")))
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=True):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-
-        if 'entries' in data:
-            data = data['entries'][0]
-
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
-
-
 class Music(commands.Cog):
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        bot.loop.create_task(self.create_nodes())
 
+    async def create_nodes(self):
+        await self.bot.wait_until_ready()
+        await wavelink.NodePool.create_node(bot=self.bot,
+                                            host='localhost',
+                                            port='2333',
+                                            password='discloud')
 
-    @commands.command()
-    async def play(self, ctx: commands.Context, *, url: Optional[str]):
-        '''Reproduz da URL'''
+    @commands.Cog.listener()
+    async def on_wavelink_node_ready(self, node: wavelink.Node):
+        print(f'Wavelink Node: {node.identifier} ready')
 
-        embed = discord.Embed(color=config.cinza,
-                                    description='')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+    @commands.command(name='join', aliases=['connect', 'entre'])
+    async def join(self, ctx: commands.Context, canal: Optional[discord.VoiceChannel]):
+        if canal is None:
+            canal = ctx.author.voice.channel
 
-        if ctx.voice_client is None:
-            if ctx.author.voice:
-                await ctx.author.voice.channel.connect()
-            else:
-                embed.description = 'Você não está conectado a um canal de voz'
-                return await ctx.send(embed=embed)
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(ctx.guild)
 
-        voice_client: discord.VoiceClient = ctx.voice_client
-        if voice_client.is_paused():
-            voice_client.resume()
-            return await ctx.message.add_reaction(config.confirm)
+        if player is not None:
+            if player.is_connected():
+                return await ctx.send(canal.mention)
 
-        if url == None or not re.match(config.https_regex, url):
-            embed.description = 'Informe um url válido'
-            await ctx.send(embed=embed)
-            return
-        
-        player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-        voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-
-        embed.title = player.title
-        embed.url = url
-        embed.description = (f'**Duração:** {player.duration} || **Visualizações:** {player.view}')
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    async def volume(self, ctx: commands.Context, volume: Optional[int]):
-
-        embed = discord.Embed(color=config.cinza,
-                                    description='')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-
-        if volume is None:
-            embed.description = f'Volume atual: {int(ctx.voice_client.source.volume)*10}%'
-            return await ctx.send(embed=embed)
-
-        if ctx.voice_client is None:
-            embed.description = 'Não estou em um canal de voz'
-            return await ctx.send(embed=embed)
-        
-        if ctx.voice_client.channel != ctx.author.voice.channel:
-            embed.description = f'Você não está em {ctx.voice_client.channel.mention}'
-            return await ctx.send(embed=embed)
-
-        ctx.voice_client.source.volume = volume / 100
+        await canal.connect(cls=wavelink.Player, timeout=30, self_deaf=True)
         await ctx.message.add_reaction(config.confirm)
-
-
-    @commands.command()
-    async def pause(self, ctx: commands.Context):
-
-        if ctx.author.voice.channel != ctx.voice_client.channel:
-            return await ctx.message.add_reaction(config.negative)
-
-        voice_client: discord.VoiceClient = ctx.voice_client
-
-        if voice_client.is_paused():
-            voice_client.resume()
-            return await ctx.message.add_reaction(config.confirm)
-        
-        if voice_client.is_playing():
-            voice_client.pause()
-            return await ctx.message.add_reaction(config.confirm)
-        
-
-    @commands.command()
+    
+    @commands.command(name='leave', aliases=['disconnect', 'saia'])
     async def leave(self, ctx: commands.Context):
 
-        await ctx.voice_client.disconnect()
-        ctx.voice_client.cleanup()
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(ctx.guild)
+
+        if player is None:
+            return await ctx.send('nao estou')
+        
+        await player.disconnect()
+        await ctx.message.add_reaction(config.confirm)
+
+    @commands.command(name='play', aliases=['p'])
+    async def play(self, ctx: commands.Context, *, url):
+        tracks = await wavelink.NodePool.get_node().get_tracks(wavelink.YouTubeTrack, url)
+
+        if not ctx.voice_client:
+            vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player, timeout=30, self_deaf=True)
+        else:
+            vc: wavelink.Player = ctx.voice_client
+
+        await vc.set_volume(5)
+        await vc.play(tracks[0])
+        await ctx.message.add_reaction(config.confirm)
+
+    @commands.command(name='search')
+    async def search(self, ctx: commands.Context, *, search: str):
+        search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
+
+        if not ctx.voice_client:
+            vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
+        else:
+            vc: wavelink.Player = ctx.voice_client
+
+        await vc.set_volume(5)
+        await vc.play(search)
+        await ctx.message.add_reaction(config.confirm)
+
+    @commands.command(name='stop')
+    async def stop(self, ctx: commands.Context):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(ctx.guild)
+
+        if player is None:
+            return await ctx.send('nao estou')
+        
+        if player.is_playing():
+            await player.stop()
+            return await ctx.message.add_reaction(config.confirm)
+        else:
+            await ctx.message.add_reaction(config.negative)
+
+    @commands.command(name='pause')
+    async def pause(self, ctx: commands.Context):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(ctx.guild)
+
+        if player is None:
+            return await ctx.send('nao estou')
+        
+        if not player.is_paused():
+            if player.is_playing():
+                await player.pause()
+                return await ctx.message.add_reaction(config.confirm)
+            else:
+                return await ctx.message.add_reaction(config.negative)
+        else:
+            return await ctx.message.add_reaction(config.negative)
+        
+    @commands.command(name='resume')
+    async def resume(self, ctx: commands.Context):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(ctx.guild)
+
+        if player is None:
+            return await ctx.send('nao estou')
+
+        if player.is_paused():
+            await player.resume()
+            return await ctx.message.add_reaction(config.confirm)
+        else:
+            return await ctx.message.add_reaction(config.negative)
+    
+    @commands.command(name='volume')
+    async def volume(self, ctx:commands.Context, volume: int):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(ctx.guild)
+
+        await player.set_volume(volume)
         return await ctx.message.add_reaction(config.confirm)
-
-
-
+        
 async def setup(bot):
     await bot.add_cog(Music(bot))

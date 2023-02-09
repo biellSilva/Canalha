@@ -3,7 +3,5 @@ python_dotenv >= 0.20.0
 pytz >= 2022.5
 googletrans == 4.0.0-rc1
 emoji-country-flag
-countryinfo 
-youtube_dl
-ffmpeg
-pynacl
+countryinfo
+wavelink
