@@ -1,4 +1,4 @@
-.gitignore
+.discloudignore
 config.py
 .env
 .ignore
