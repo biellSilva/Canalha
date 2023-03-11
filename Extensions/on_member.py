@@ -7,7 +7,7 @@ from discord.ext import commands
 
 class onMember(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
 
@@ -31,10 +31,14 @@ class onMember(commands.Cog):
 
 
     @commands.Cog.listener()
-    async def on_member_leave(self, member: discord.Member):
-        guild: discord.Guild = self.bot.get_guild(config.avalon)
-        visitante = guild.get_role(config.visitante)
+    async def on_raw_member_remove(self, payload):
+        guild = self.bot.get_guild(payload.guild_id)
         log = guild.get_channel(config.member_log)
+
+        member = payload.user
+        
+        if member.bot:
+            return
 
         em = discord.Embed(color=config.vermelho,
                         description=f'{member.mention} saiu',
@@ -42,7 +46,6 @@ class onMember(commands.Cog):
         em.set_footer(text=f'{member.display_name} - {member.id}')
         em.set_author(name=member, icon_url=member.display_avatar.url)
 
-        await member.add_roles(visitante)
         await log.send(embed=em)
 
 

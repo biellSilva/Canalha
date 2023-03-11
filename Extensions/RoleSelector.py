@@ -70,6 +70,18 @@ class JogadorView(discord.ui.View):
                 value='mudae_player',
                 emoji='<:UmaruHehe:1006618969882497064>',
                 description='Jogador que quer acesso aos canais do Mudae bot'),
+            
+            discord.SelectOption(
+                label='Dicas',
+                value='dicas',
+                emoji='<:UmaruHehe:1006618969882497064>',
+                description='Jogador que quer acesso aos canais do Mudae bot'),
+
+            discord.SelectOption(
+                label='Novidades',
+                value='novidades',
+                emoji='<:UmaruHehe:1006618969882497064>',
+                description='Jogador que quer acesso aos canais do Mudae bot'),
             ]
         )
 

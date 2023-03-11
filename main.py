@@ -1,6 +1,5 @@
 import discord
 import os
-import dotenv
 import asyncio
 
 from discord.ext import commands
@@ -79,7 +78,5 @@ async def sync(ctx: Context, spec=None):
         return
 
 
-
-dotenv.load_dotenv(dotenv.find_dotenv())
 token = os.getenv('token')
 bot.run(token=token)

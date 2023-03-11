@@ -5,7 +5,6 @@ import datetime
 from discord.ext import commands
 
 
-
 class On_message(commands.Cog):
 
     def __init__(self, bot):
@@ -37,7 +36,7 @@ class On_message(commands.Cog):
             return
 
         if message.channel.id == config.mudae_rolls:
-            if 'sniper' in message.content.lower():
+            if '$rt' in message.content.lower():
                 await message.reply('https://tenor.com/view/gun-reload-sniper-gif-16301372')
                 return
         
