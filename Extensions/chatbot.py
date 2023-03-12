@@ -7,7 +7,7 @@ from discord.ext.commands import Context
 from os import getenv
 from asyncio import TimeoutError
 
-openai.api_key = "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"
+openai.api_key = ""
 
 
 async def get_davinci_response(prompt):
